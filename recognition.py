@@ -2,10 +2,13 @@ import torch
 import pygame
 import os
 from net import Net
-from digit_recognition_trainer import normalize
+from digit_recognition_trainer import normalize, get_params
 
+params = get_params()
 model = Net().to("cuda")
-model.load_state_dict(torch.load("./model-1-conv"))
+model.load_state_dict(
+    torch.load(os.path.join("out", params["name"]), weights_only=True)
+)
 
 pygame.init()
 width, height = 28, 28
