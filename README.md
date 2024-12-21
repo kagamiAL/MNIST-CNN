@@ -1,5 +1,5 @@
 # MNIST-CNN
-MNIST-CNN is a convolutional neural network designed to train and infer on the MNIST databse
+MNIST-CNN is a convolutional neural network designed to train and infer on the MNIST database
 
 ## Usage
 Make sure you have installed the dependencies listed in **requirements.txt**
