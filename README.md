@@ -14,6 +14,8 @@ tries guessing the number you've drawn
 You can choose which model the application will use by
 changing the "name" field in **parameters.json**. Models must be a **.pt** file
 ```json
+//Do not specify the path just the name
+//Assumes your model is in the out/ directory
 "name": "THE NAME OF YOUR MODEL.pt"
 ```
 To start the application simply run the command:
@@ -51,5 +53,6 @@ To start training simply run the command:
 python digit_recognition_trainer.py
 ```
 
+Models will be saved in the out/ directory
 ## Authors
 Alan Bach, bachalan330@gmail.com
