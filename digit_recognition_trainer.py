@@ -100,7 +100,7 @@ def training_loop(
     best_loss = 1e9
     loss_fn = nn.CrossEntropyLoss()
     pre = "Progress per 10 Epochs"
-    save_path = os.path.join("out", params["name"] + ".pt")
+    save_path = os.path.join("out", params["name"])
     for epoch in range(1, n_epochs + 1):
         avg_loss_train = 0.0
         total = 0
