@@ -1,4 +1,6 @@
 import json
+import pathlib
+import os
 import numpy.typing as nt
 import numpy as np
 import torch.nn as nn
@@ -8,7 +10,7 @@ import torch.utils.data as torch_data
 from net import Net
 from mnist_dataset import MNIST_Dataset
 
-# Print iterations progress
+device = torch.cuda.is_available() and "cuda" or "cpu"
 
 
 def printProgressBar(
@@ -62,8 +64,8 @@ def load_data(path, transform=None) -> torch_data.Dataset:
     one_hot = torch.zeros(digit_t.shape[0], 10)
     one_hot.scatter_(1, digit_t[:, 0].unsqueeze(1), 1.0)
     return MNIST_Dataset(
-        normalize(digit_t[:, 1:].float()).view(-1, 28, 28).unsqueeze(1).to("cuda"),
-        one_hot.to("cuda"),
+        normalize(digit_t[:, 1:].float()).view(-1, 28, 28).unsqueeze(1).to(device),
+        one_hot.to(device),
         transform,
     )
 
@@ -80,15 +82,25 @@ def get_accuracy(model, data):
     return correct / total
 
 
+def get_avg_loss(model: Net, data_loader: torch_data.DataLoader, loss_fn):
+    with torch.no_grad():
+        avg_loss = 0.0
+        for input, labels in data_loader:
+            avg_loss += loss_fn(model(input), labels).item()
+        return avg_loss / len(data_loader)
+
+
 def training_loop(
     n_epochs: int,
-    optimizer: optim.SGD,
+    optimizer: optim.Optimizer,
     model: Net,
     train_loader: torch_data.DataLoader,
     val_loader: torch_data.DataLoader,
 ):
+    best_loss = 1e9
     loss_fn = nn.CrossEntropyLoss()
     pre = "Progress per 10 Epochs"
+    save_path = os.path.join("out", params["name"])
     for epoch in range(1, n_epochs + 1):
         avg_loss_train = 0.0
         total = 0
@@ -101,12 +113,26 @@ def training_loop(
             avg_loss_train += loss.item()
             total += 1
         printProgressBar((epoch - 1) % 10 + 1, 10, prefix=pre)
+        avg_val_loss = get_avg_loss(model, val_loader, loss_fn)
+        if avg_val_loss < best_loss:
+            print()
+            print(f"New best validation loss! Best validation loss: {
+                  avg_val_loss}")
+            best_loss = avg_val_loss
+            torch.save(model.state_dict(), save_path)
+            print()
         if epoch % 10 == 0:
             print(f"""\nEpoch: {epoch}
             Avg train loss: {avg_loss_train/total}
             Val accuracy: {get_accuracy(model, val_loader)}
             Train accuracy: {get_accuracy(model, train_loader)}
             """)
+    print("Results of current best model:")
+    model.load_state_dict(torch.load(save_path, weights_only=True))
+    print(f"""
+    Val accuracy: {get_accuracy(model, val_loader)}
+    Train accuracy: {get_accuracy(model, train_loader)}
+    """)
 
 
 def get_params():
@@ -115,13 +141,12 @@ def get_params():
 
 
 if __name__ == "__main__":
+    pathlib.Path("out").mkdir(parents=True, exist_ok=True)
     params = get_params()
     train_dataset = load_data("./MNIST_CSV/mnist_train.csv")
     val_dataset = load_data("./MNIST_CSV/mnist_test.csv")
     train_loader = get_dataloader(train_dataset, params["batch_size"])
     val_loader = get_dataloader(val_dataset, params["batch_size"])
-    model = Net().to("cuda")
+    model = Net().to(device)
     optimizer = optim.SGD(model.parameters(), lr=params["learning_rate"])
     training_loop(params["epochs"], optimizer, model, train_loader, val_loader)
-    # TODO: Fix saving with lowest val loss
-    torch.save(model.state_dict(), params["name"])

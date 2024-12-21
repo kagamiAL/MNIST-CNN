@@ -1,6 +1,6 @@
 {
     "epochs": 100,
-    "batch_size": 64,
-    "name": "model-2-conv",
+    "batch_size": 32,
+    "name": "model-SGD-conv",
     "learning_rate": 1e-2
 }
