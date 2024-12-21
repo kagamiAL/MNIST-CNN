@@ -116,23 +116,26 @@ def training_loop(
         avg_val_loss = get_avg_loss(model, val_loader, loss_fn)
         if avg_val_loss < best_loss:
             print()
-            print(f"New best validation loss! Best validation loss: {
-                  avg_val_loss}")
+            print(f"New best validation loss! Best validation loss: {avg_val_loss}")
             best_loss = avg_val_loss
             torch.save(model.state_dict(), save_path)
             print()
         if epoch % 10 == 0:
-            print(f"""\nEpoch: {epoch}
+            print(
+                f"""\nEpoch: {epoch}
             Avg train loss: {avg_loss_train/total}
             Val accuracy: {get_accuracy(model, val_loader)}
             Train accuracy: {get_accuracy(model, train_loader)}
-            """)
+            """
+            )
     print("Results of current best model:")
     model.load_state_dict(torch.load(save_path, weights_only=True))
-    print(f"""
+    print(
+        f"""
     Val accuracy: {get_accuracy(model, val_loader)}
     Train accuracy: {get_accuracy(model, train_loader)}
-    """)
+    """
+    )
 
 
 def get_params():
@@ -143,8 +146,8 @@ def get_params():
 if __name__ == "__main__":
     pathlib.Path("out").mkdir(parents=True, exist_ok=True)
     params = get_params()
-    train_dataset = load_data("./MNIST_CSV/mnist_train.csv")
-    val_dataset = load_data("./MNIST_CSV/mnist_test.csv")
+    train_dataset = load_data(params["train_csv"])
+    val_dataset = load_data(params["val_csv"])
     train_loader = get_dataloader(train_dataset, params["batch_size"])
     val_loader = get_dataloader(val_dataset, params["batch_size"])
     model = Net().to(device)

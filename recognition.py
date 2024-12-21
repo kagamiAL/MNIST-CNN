@@ -4,10 +4,14 @@ import os
 from net import Net
 from digit_recognition_trainer import normalize, get_params
 
+device = torch.cuda.is_available() and "cuda" or "cpu"
+
 params = get_params()
-model = Net().to("cuda")
+model = Net().to(device)
 model.load_state_dict(
-    torch.load(os.path.join("out", params["name"]), weights_only=True)
+    torch.load(
+        os.path.join("out", params["name"]), weights_only=True, map_location=device
+    )
 )
 
 pygame.init()
@@ -21,7 +25,7 @@ white = (255, 255, 255)
 running = True
 drawing = False
 erasing = False
-t_canvas = torch.zeros(1, 784).to("cuda")
+t_canvas = torch.zeros(1, 784).to(device)
 
 
 def color_canvas(color, x, y):
